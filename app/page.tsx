@@ -2,15 +2,14 @@
 
 import OneLineForm from "@/components/OneLineForm";
 import OneLineList from "@/components/OneLineList";
-import { createLine, seedLines, useLines } from "@/lib/store";
+import { useLines } from "@/lib/store";
 
 export default function HomePage() {
-  // 값(변수) — localStorage에 저장되어 새로고침해도 남아 있습니다.
-  // ③회차에서 이 부분을 진짜 창고(Supabase)로 교체합니다.
-  const [lines, setLines] = useLines("home", seedLines);
+  // 값(변수) — 이제 Supabase에 저장되어 모든 손님이 같은 목록을 봅니다.
+  const { lines, loading, addLine } = useLines();
 
   function handleSubmit(nickname: string, message: string) {
-    setLines((prev) => [createLine(nickname, message), ...prev]);
+    addLine(nickname, message);
   }
 
   return (
@@ -23,10 +22,14 @@ export default function HomePage() {
       </section>
 
       <OneLineForm onSubmit={handleSubmit} />
-      <OneLineList lines={lines} />
+      {loading ? (
+        <p className="empty">불러오는 중...</p>
+      ) : (
+        <OneLineList lines={lines} />
+      )}
 
       <p className="hint">
-        새로고침해 보세요. 이제 이 브라우저에서는 방금 남긴 줄이 그대로 남아 있습니다.
+        이제 이 목록은 모든 손님에게 똑같이 보입니다.
       </p>
     </>
   );
