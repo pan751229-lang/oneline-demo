@@ -1,5 +1,3 @@
 export default function HelloPage() {
-return (
-    <h1>안녕<br />반가워<br />이제 가봐</h1>
-);
+  return <h1>안녕하세요</h1>;
 }

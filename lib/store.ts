@@ -1,73 +1,36 @@
 // ─────────────────────────────────────────────────────────────
-//  창고 (진짜)
+//  창고 (③회차에서 교체 완료)
 //
-//  이제 Supabase의 lines 표에 직접 읽고 씁니다.
-//  → 모든 손님이 같은 목록을 보고, 같은 곳에 남깁니다.
+//  ①②회차까지는 이 파일이 브라우저 메모리였습니다.
+//  새로고침하면 전부 사라지던 그 자리입니다.
+//
+//  지금은 진짜 창고(Supabase)로 바뀌었고, 이 파일에는
+//  '무엇을 담는가'(타입)와 화면에 쓰는 작은 도구만 남았습니다.
 // ─────────────────────────────────────────────────────────────
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-
 export type OneLine = {
-  id: number;
+  id: string;
   nickname: string;
   message: string;
   createdAt: string;
 };
 
-function mapRow(row: {
-  id: number;
-  created_at: string;
-  nikname: string;
+// 창고에서 꺼낸 행(row) 을 화면이 쓰는 모양으로 바꿔줍니다.
+// 창고는 snake_case(created_at), 화면은 camelCase(createdAt) 를 씁니다.
+export type LineRow = {
+  id: string;
+  nickname: string;
   message: string;
-}): OneLine {
+  created_at: string;
+};
+
+export function toOneLine(row: LineRow): OneLine {
   return {
     id: row.id,
-    nickname: row.nikname,
+    nickname: row.nickname,
     message: row.message,
     createdAt: row.created_at,
   };
-}
-
-export function useLines() {
-  const [lines, setLines] = useState<OneLine[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let ignore = false;
-
-    supabase
-      .from("lines")
-      .select("id, created_at, nikname, message")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (!ignore && data) setLines(data.map(mapRow));
-        if (!ignore) setLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  async function addLine(nickname: string, message: string) {
-    const { data, error } = await supabase
-      .from("lines")
-      .insert({
-        nikname: nickname.trim() || "익명",
-        message: message.trim(),
-      })
-      .select("id, created_at, nikname, message")
-      .single();
-
-    if (!error && data) {
-      setLines((prev) => [mapRow(data), ...prev]);
-    }
-
-    return error;
-  }
-
-  return { lines, loading, addLine };
 }
 
 export function formatTime(iso: string): string {
