@@ -13,8 +13,13 @@ create table if not exists public.lines (
   user_id     uuid        not null references auth.users(id) on delete cascade,
   nickname    text        not null,
   message     text        not null,
+  is_secret   boolean     not null default false,
   created_at  timestamptz not null default now()
 );
+
+-- 이미 만들어진 창고에 비밀글 칸만 추가할 때 (⑥회차)
+alter table public.lines
+  add column if not exists is_secret boolean not null default false;
 
 -- 최신 글부터 빠르게 꺼내기 위한 색인
 create index if not exists lines_user_created_idx
@@ -27,13 +32,18 @@ create index if not exists lines_user_created_idx
 alter table public.lines enable row level security;
 
 
--- ③ 좌석 배정 — 내 것만 보이게 (④회차)
+-- ③ 좌석 배정 (⑤⑥회차)
+--    조회는 팔찌 찬 사람 전체 공개(단, 비밀글은 쓴 사람만), 쓰기·지우기는 내 것만.
 --    auth.uid() = 지금 팔찌를 찬 사람의 번호
 
 drop policy if exists "내 줄만 조회" on public.lines;
-create policy "내 줄만 조회"
+drop policy if exists "로그인하면 전체 조회" on public.lines;
+create policy "로그인하면 전체 조회"
   on public.lines for select
-  using ( auth.uid() = user_id );
+  using (
+    auth.uid() is not null
+    and ( is_secret = false or auth.uid() = user_id )
+  );
 
 drop policy if exists "내 이름으로만 작성" on public.lines;
 create policy "내 이름으로만 작성"
@@ -44,6 +54,9 @@ drop policy if exists "내 줄만 삭제" on public.lines;
 create policy "내 줄만 삭제"
   on public.lines for delete
   using ( auth.uid() = user_id );
+
+-- update 정책은 만들지 않습니다 — 정책이 없으면 RLS 는 기본 거부이므로
+-- 내 글이든 남의 글이든 "고치기"는 아무도 못 합니다. (지우고 새로 쓰는 것만 가능)
 
 
 -- ─────────────────────────────────────────────────────────────

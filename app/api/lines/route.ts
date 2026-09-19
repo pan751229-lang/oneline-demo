@@ -43,7 +43,7 @@ export async function GET(req: Request) {
   const supabase = 창고열기(팔찌);
   const { data, error } = await supabase
     .from("lines")
-    .select("id, nickname, message, created_at")
+    .select("id, user_id, nickname, message, is_secret, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
   }
 
-  const { nickname, message } = await req.json();
+  const { nickname, message, isSecret } = await req.json();
 
   // 판단 — 빈 칸이면 그냥 돌려보냅니다 (②회차의 그 뼈대)
   if (!message || message.trim().length === 0) {
@@ -84,8 +84,9 @@ export async function POST(req: Request) {
       user_id: user.id,
       nickname: (nickname ?? "").trim() || "익명",
       message: message.trim(),
+      is_secret: Boolean(isSecret),
     })
-    .select("id, nickname, message, created_at")
+    .select("id, user_id, nickname, message, is_secret, created_at")
     .single();
 
   if (error) {

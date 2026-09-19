@@ -10,8 +10,10 @@
 
 export type OneLine = {
   id: string;
+  userId: string;
   nickname: string;
   message: string;
+  isSecret: boolean;
   createdAt: string;
 };
 
@@ -19,16 +21,20 @@ export type OneLine = {
 // 창고는 snake_case(created_at), 화면은 camelCase(createdAt) 를 씁니다.
 export type LineRow = {
   id: string;
+  user_id: string;
   nickname: string;
   message: string;
+  is_secret: boolean;
   created_at: string;
 };
 
 export function toOneLine(row: LineRow): OneLine {
   return {
     id: row.id,
+    userId: row.user_id,
     nickname: row.nickname,
     message: row.message,
+    isSecret: row.is_secret,
     createdAt: row.created_at,
   };
 }

@@ -10,6 +10,7 @@ import { toOneLine, type LineRow, type OneLine } from "@/lib/store";
 export default function HomePage() {
   const [lines, setLines] = useState<OneLine[]>([]);
   const [이메일, set이메일] = useState<string | null>(null);
+  const [사용자ID, set사용자ID] = useState<string | null>(null);
   const [불러오는중, set불러오는중] = useState(true);
   const [알림, set알림] = useState("");
 
@@ -26,6 +27,7 @@ export default function HomePage() {
 
     if (!팔찌) {
       set이메일(null);
+      set사용자ID(null);
       setLines([]);
       set불러오는중(false);
       return;
@@ -33,6 +35,7 @@ export default function HomePage() {
 
     const { data: { user } } = await supabase.auth.getUser();
     set이메일(user?.email ?? null);
+    set사용자ID(user?.id ?? null);
 
     const res = await fetch("/api/lines", {
       headers: { Authorization: `Bearer ${팔찌}` },
@@ -58,7 +61,7 @@ export default function HomePage() {
   }, [불러오기]);
 
   // 웨이터에게 "새로 적어주세요" (POST)
-  async function 남기기(nickname: string, message: string) {
+  async function 남기기(nickname: string, message: string, isSecret: boolean) {
     const 팔찌 = await 팔찌가져오기();
     if (!팔찌) return;
 
@@ -68,7 +71,7 @@ export default function HomePage() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${팔찌}`,
       },
-      body: JSON.stringify({ nickname, message }),
+      body: JSON.stringify({ nickname, message, isSecret }),
     });
 
     if (!res.ok) {
@@ -120,11 +123,11 @@ export default function HomePage() {
           {불러오는중 ? (
             <p className="empty">창고에서 꺼내는 중…</p>
           ) : (
-            <OneLineList lines={lines} onDelete={지우기} />
+            <OneLineList lines={lines} currentUserId={사용자ID} onDelete={지우기} />
           )}
           <p className="hint">
-            여기 보이는 것은 <strong>내가 쓴 줄뿐</strong>입니다. 다른 계정으로
-            로그인하면 전혀 다른 목록이 보입니다 — 창고가 알아서 걸러줍니다.
+            모두의 한 줄이 보입니다. <strong>지우기</strong>는 내가 쓴 줄에만
+            보입니다 — 남의 줄은 보기만 할 수 있습니다.
           </p>
         </>
       ) : (
