@@ -13,3 +13,7 @@
 # 로그·시스템 파일
 *.log
 .DS_Store
+
+# 빌드 캐시
+tsconfig.tsbuildinfo
+supabase/.temp/
